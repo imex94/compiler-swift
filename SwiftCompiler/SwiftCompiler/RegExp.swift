@@ -20,6 +20,21 @@ enum Regex {
     indirect case RECORD(String, Regex)
 }
 
+func ==(a: Regex, b: Regex) -> Bool {
+    switch (a, b) {
+    case (.NULL, .NULL): return true
+    case (.EMPTY, .EMPTY): return true
+    case (.CHAR(let c1), .CHAR(let c2)) where c1 == c2: return true
+    case (.ALT(let x, let y), .ALT(let z, let v)) where x == z && y == v: return true
+    case (.SEQ(let x, let y), .SEQ(let z, let v)) where x == z && y == v: return true
+    case (.STAR(let x), .STAR(let y)) where x == y: return true
+    case (.NTIMES(let x, let y), .NTIMES(let z, let v)) where x == z && y == v: return true
+    case (.NOT(let x), .NOT(let y)) where x == y: return true
+    case (.RECORD(let x, let y), .RECORD(let z, let v)) where x == z && y == v: return true
+    default: return false
+    }
+}
+
 class RegExp: NSObject {
     
     class func nullable(r: Regex) -> Bool {
@@ -61,11 +76,32 @@ class RegExp: NSObject {
             //TODO: Simplification
         default:
             let (c, rest) = (s.first!, s.dropFirst())
-            return ders(Array(rest), der(c, r))
+            return ders(Array(rest), RegExp.simp(der(c, r)))
         }
     }
     
     class func matches(r: Regex, s: String) -> Bool {
         return nullable(ders(Array(s.characters), r))
+    }
+    
+    class func simp(r: Regex) -> Regex {
+        switch r {
+        case .ALT(let r1, let r2):
+            switch (simp(r1), simp(r2)) {
+            case (.NULL, let re2): return re2
+            case (let re1, .NULL): return re1
+            case (let re1, let re2): return re1 == r2 ? re1 : .ALT(re1, re2)
+            }
+        case .SEQ(let r1, let r2):
+            switch (simp(r1), simp(r2)) {
+            case (.NULL, _): return .NULL
+            case (_, .NULL): return .NULL
+            case (.EMPTY, let re2): return re2
+            case (let re1, .EMPTY): return re1
+            case (let re1, let re2): return .SEQ(re1, re2)
+            }
+        case .NTIMES(let re1, let n): return .NTIMES(simp(re1), n)
+        default: return r
+        }
     }
 }
