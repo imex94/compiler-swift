@@ -1,6 +1,8 @@
 # Compiler, implemented in Swift 2
 
-A small compiler, implemented in Swift 2, with regular expressions implemented for the Lexer, using Brzozowski derivatives and Sulzmann tokeniser. For Parse it uses Parser Combinators. 
+*Under Development*
+
+A small compiler, implemented in Swift 2, with regular expressions implemented for the Lexer, using Brzozowski derivatives and Sulzmann tokeniser. For Parser it uses Parser Combinators. 
 
 The compiler generates Java Byte Code and runs on the JVM.
 
